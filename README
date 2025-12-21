@@ -1,0 +1,36 @@
+The goal of this project is to create a sensor monitoring system, and
+specifically the server-side part. The client is given in 'sensor_node.c',
+and can be used to test the server.
+
+The minimum set of requirements:
+
+1. The program has a main process and a log subprocess. Both run simultaneously.
+
+2. The main process runs three threads at startup: (i) the connection manager, (ii) the data manager, and (iii) the storage manager. A shared data structure (sbuffer) is used to communicate between all of the threads. All read/write/update actions need to be thread-safe.
+
+3. The connection manager listen on a TCP socket for incoming connection requests from new sensor nodes. Command usage: `./sensor_gateway 1234 3` starts the server on port 1234 and stops the program once the 3rd client disconnects and all the data is processed. For each client node, there should be a dedicated thread processing incoming data from this client.
+
+4. The connection manager writes the data to the shared buffer. If the sensor node (client) has not sent any new data within the defined time-out (defined during compilation, see Makefile), the server closes the connection.
+
+5. The room-sensor mapping is read from a text file "room_sensor.map" and the data manager only reads sensor data from the shared buffer (not a file). The data manager also calculates a running average of the temperature and uses it for internal decision-making (too hot/cold).
+
+6. The storage manager thread reads sensor measurements from the shared data buffer and adds them to a file "data.csv" that should be created during server start-up. It should not be deleted when the server stops.
+
+7. The log process receives log-events from the main process using a pipe. This means that the pipe is shared by multiple threads and access to the pipe must be thread-safe.
+
+8. When the server is started, a new, empty file "gateway.log" must be created that is not deleted at server termination. Log-events are written to this file as ASCII info messages in the format "<sequence number> <timestamp> <log-event info message>".
+
+9. Log-events that need to be supported:
+    (i) From the connection manager
+        - Sensor node <sensor_node_id> has opened a new connection
+        - Sensor noed <sensor_node_id> has closed the connection
+    (ii) From the data manager
+        - Sensor node <sensor_node_id> reports it's too cold (avg temp = <value>)
+        - Sensor node <sensor_node_id> reports it's too hot (aveg temp = <value>)
+    (iii) From the storage manager
+        - A new data.csv has been created
+        - Data insertion from sensor <sensor_node_id> succeeded
+        - The data.csv file has been closed
+
+
+10. No semaphores allowed, only mutexes and condition variables.
