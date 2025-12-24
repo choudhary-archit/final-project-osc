@@ -34,3 +34,13 @@ The minimum set of requirements:
 
 
 10. No semaphores allowed, only mutexes and condition variables.
+
+----------------
+
+The plan is as follows:
+
+1. Implement and test the sbuffer, minus the multithreading.
+2. Implement connmgr, connect it to sbuffer, in seperate thread.
+3. Implement datamgr, connect it to sbuffer, in seperate thread.
+4. Implement storage manager, connect it to sbuffer, in seperate thread.
+5. Create seperate log process.
