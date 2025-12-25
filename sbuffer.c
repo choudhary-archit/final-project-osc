@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <pthread.h>
 
 #include "sbuffer.h"
@@ -15,6 +16,8 @@
 typedef struct sbuffer_node {
     struct sbuffer_node *next;  /**< a pointer to the next node*/
     sensor_data_t data;         /**< a structure containing the data */
+    bool datamgr_read;
+    bool db_read;
 } sbuffer_node_t;
 
 /**
@@ -62,43 +65,65 @@ int sbuffer_free(sbuffer_t **buffer) {
     return SBUFFER_SUCCESS;
 }
 
-
-int sbuffer_remove(sbuffer_t *buffer, sensor_data_t *data) {
+// Consumer id is used to identify which thread is calling this
+int sbuffer_remove(sbuffer_t *buffer, sensor_data_t *data, int consumer_id) {
     if (buffer == NULL) return SBUFFER_FAILURE;
+    if (consumer_id != 0 && consumer_id != 1) return SBUFFER_FAILURE;
 
+    // Lock so each thread acts in order
     pthread_mutex_lock(&buffer->mutex);
 
-    while (buffer->head == NULL && !buffer->eos) {
-        pthread_cond_wait(&buffer->not_empty, &buffer->mutex);
-    }
+    while (true) {
+        // If empty and not EOS, wait until not empty
+        while (buffer->head == NULL && !buffer->eos) {
+            pthread_cond_wait(&buffer->not_empty, &buffer->mutex);
+        }
 
-    if (buffer->head == NULL && buffer->eos) {
-        pthread_mutex_unlock(&buffer->mutex);
-        return SBUFFER_NO_DATA;
-    }
+        // If empty and EOS, exit
+        if (buffer->head == NULL && buffer->eos) {
+            pthread_mutex_unlock(&buffer->mutex);
+            return SBUFFER_NO_DATA;
+        }
 
-    sbuffer_node_t *dummy = buffer->head;
-    *data = dummy->data;
+        sbuffer_node_t *dummy = buffer->head;
+        *data = dummy->data;
 
-    if (buffer->head == buffer->tail) // buffer has only one node
-    {
-        buffer->head = buffer->tail = NULL;
-    } else  // buffer has many nodes empty
-    {
-        buffer->head = buffer->head->next;
-    }
+        // Check if current thread has already read the HEAD
+        bool already_read =
+            (consumer_id == 0 && dummy->datamgr_read) ||
+            (consumer_id == 1 && dummy->db_read);
 
-    if (data->id == 0) {
-        buffer->eos = 1;
+        if (already_read) {
+            pthread_cond_wait(&buffer->not_empty, &buffer->mutex);
+            continue;
+        }
+
+        // Mark read field
+        if (consumer_id == 0) {
+            dummy->datamgr_read = true;
+        } else if (consumer_id == 1) {
+            dummy->db_read = true;
+        }
+
+        // Remove node if both threads have read it
+        if (dummy->datamgr_read && dummy->db_read) {
+            buffer->head = dummy->next;
+            if (buffer->head == NULL) buffer->tail == NULL;
+            free(dummy);
+        }
+
         pthread_cond_broadcast(&buffer->not_empty);
-        pthread_mutex_unlock(&buffer->mutex);
-        free(dummy);
-        return SBUFFER_NO_DATA;
-    }
 
-    pthread_mutex_unlock(&buffer->mutex);
-    free(dummy);
-    return SBUFFER_SUCCESS;
+        // If sensor id = 0, we have reached EOS
+        if (data->id == 0) {
+            buffer->eos = 1;
+            pthread_mutex_unlock(&buffer->mutex);
+            return SBUFFER_NO_DATA;
+        }
+
+        pthread_mutex_unlock(&buffer->mutex);
+        return SBUFFER_SUCCESS;
+    }
 }
 
 
@@ -111,6 +136,8 @@ int sbuffer_insert(sbuffer_t *buffer, sensor_data_t *data) {
 
     dummy->data = *data;
     dummy->next = NULL;
+    dummy->datamgr_read = false;
+    dummy->db_read = false;
 
     pthread_mutex_lock(&buffer->mutex);
 

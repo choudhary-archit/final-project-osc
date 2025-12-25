@@ -5,6 +5,9 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+#define SET_MAX_TEMP 14
+#define SET_MIN_TEMP 13
+
 #include <stdint.h>
 #include <time.h>
 
