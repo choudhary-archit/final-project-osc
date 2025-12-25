@@ -23,13 +23,13 @@ int main(int argc, char *argv[]) {
     }
 
     // Start connmgr thread
-    run_arg_t conn_arg;
-    conn_arg.max_conn = atoi(argv[2]);
-    conn_arg.port = atoi(argv[1]);
-    conn_arg.buffer = buffer;
+    conn_args_t conn_args;
+    conn_args.max_conn = atoi(argv[2]);
+    conn_args.port = atoi(argv[1]);
+    conn_args.buffer = buffer;
 
     pthread_t connmgr_thread;
-    pthread_create(&connmgr_thread, NULL, run_connmgr, &conn_arg);
+    pthread_create(&connmgr_thread, NULL, run_connmgr, &conn_args);
 
     // Start datamgr thread
     datamgr_args_t datamgr_args;

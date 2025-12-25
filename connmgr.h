@@ -2,16 +2,16 @@
 #include "sbuffer.h"
 
 // Arguments to run / handler
-typedef struct run_arg {
+typedef struct {
     int max_conn;
     int port;
     sbuffer_t *buffer;
-} run_arg_t;
+} conn_args_t;
 
-typedef struct handler_arg {
+typedef struct {
     tcpsock_t *client;
     sbuffer_t *buffer;
-} handler_arg_t;
+} node_handler_args_t;
 
 // Handle clients
 void *node_handler(void *arg);

@@ -14,9 +14,9 @@
 pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *node_handler(void *arg) {
-    handler_arg_t *handler_arg = (handler_arg_t *)arg;
-    tcpsock_t *client = handler_arg->client;
-    sbuffer_t *buffer = handler_arg->buffer;
+    node_handler_args_t *handler_args = (node_handler_args_t *)arg;
+    tcpsock_t *client = handler_args->client;
+    sbuffer_t *buffer = handler_args->buffer;
 
     int bytes, result;
     int result1, result2, result3;
@@ -54,10 +54,10 @@ void *node_handler(void *arg) {
 }
 
 void *run_connmgr(void *arg) {
-    run_arg_t *conn_arg = (run_arg_t *)arg;
-    int max_conn = conn_arg->max_conn;
-    int port = conn_arg->port;
-    sbuffer_t *buffer = conn_arg->buffer;
+    conn_args_t *conn_args = (conn_args_t *)arg;
+    int max_conn = conn_args->max_conn;
+    int port = conn_args->port;
+    sbuffer_t *buffer = conn_args->buffer;
 
     tcpsock_t *server, *client;
     int conn_counter = 0;
@@ -74,7 +74,7 @@ void *run_connmgr(void *arg) {
             exit(EXIT_FAILURE);
         printf("Incoming client connection\n");
 
-        handler_arg_t handler_args;
+        node_handler_args_t handler_args;
         handler_args.client = client;
         handler_args.buffer = buffer;
 
