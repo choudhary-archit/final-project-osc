@@ -108,7 +108,7 @@ int sbuffer_remove(sbuffer_t *buffer, sensor_data_t *data, int consumer_id) {
         // Remove node if both threads have read it
         if (dummy->datamgr_read && dummy->db_read) {
             buffer->head = dummy->next;
-            if (buffer->head == NULL) buffer->tail == NULL;
+            if (buffer->head == NULL) buffer->tail = NULL;
             free(dummy);
         }
 

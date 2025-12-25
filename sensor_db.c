@@ -32,6 +32,7 @@ static void stop_logger() {
 void *run_db(void *arg) {
     sbuffer_t *buffer = (sbuffer_t *)arg;
     FILE * fp_csv = open_db("data.csv", false);
+    if (!fp_csv) return NULL;
 
     sensor_data_t sd;
 
@@ -44,6 +45,7 @@ void *run_db(void *arg) {
     }
 
     close_db(fp_csv);
+    return NULL;
 }
 
 FILE *open_db(char *filename, bool append) {
@@ -62,6 +64,7 @@ FILE *open_db(char *filename, bool append) {
 
 int insert_sensor(FILE *f, sensor_id_t id, sensor_value_t value, sensor_ts_t ts) {
     fprintf(f, "%" PRIu16 ", %f, %lld\n", id, value, (long long) ts);
+    fflush(f);
     // write_to_log_process("Data inserted.");
 
     return 0;
