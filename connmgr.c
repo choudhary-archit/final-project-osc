@@ -4,8 +4,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/select.h>
 #include <inttypes.h>
 #include <pthread.h>
+
 #include "connmgr.h"
 #include "sbuffer.h"
 #include "config.h"
@@ -13,40 +15,66 @@
 
 pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+int wait_for_data(tcpsock_t *client) {
+    fd_set rfds;
+    FD_ZERO(&rfds);
+
+    int sd;
+    if (tcp_get_sd(client, &sd) != TCP_NO_ERROR) return -1;
+    FD_SET(sd, &rfds);
+
+    struct timeval tv;
+    tv.tv_sec = TIMEOUT;
+    tv.tv_usec = 0;
+
+    int r = select(sd + 1, &rfds, NULL, NULL, &tv);
+
+    // Timeout
+    if (r == 0) return 0;
+    // Select error
+    if (r < 0) return -1;
+    // It's fine, read socket
+    return 1;
+}
+
 void *node_handler(void *arg) {
     node_handler_args_t *handler_args = (node_handler_args_t *)arg;
     tcpsock_t *client = handler_args->client;
     sbuffer_t *buffer = handler_args->buffer;
 
+    free(handler_args);
+
     int bytes, result;
-    int result1, result2, result3;
     sensor_data_t data;
 
-    do {
+    while (1) {
+        int w = wait_for_data(client);
+
+        // Timeout
+        if (w == 0) {
+            printf("Client timed out.\n");
+            break;
+        }
+
+        if (w < 0) {
+            perror("select error");
+            break;
+        }
+
         // read sensor ID
         bytes = sizeof(data.id);
-        result1 = tcp_receive(client, (void *) &data.id, &bytes);
+        if (tcp_receive(client, &data.id, &bytes) != TCP_NO_ERROR) break;
 
         // read temperature
         bytes = sizeof(data.value);
-        result2 = tcp_receive(client, (void *) &data.value, &bytes);
+        if (tcp_receive(client, &data.value, &bytes) != TCP_NO_ERROR) break;
 
         // read timestamp
         bytes = sizeof(data.ts);
-        result3 = tcp_receive(client, (void *) &data.ts, &bytes);
+        if (tcp_receive(client, &data.ts, &bytes) != TCP_NO_ERROR) break;
 
-        // 1 iff all are 1
-        result = result1 * result2 * result3;
-
-        if ((result == TCP_NO_ERROR) && bytes)
-            sbuffer_insert(buffer, &data);
-    } while (result == TCP_NO_ERROR);
-
-    // Check if client sends close signal (instead of no error signal)
-    if (result == TCP_CONNECTION_CLOSED)
-        printf("Peer has closed connection\n");
-    else
-        printf("Error occured on connection to peer\n");
+        sbuffer_insert(buffer, &data);
+    }
 
     // Close client
     tcp_close(&client);
@@ -74,11 +102,11 @@ void *run_connmgr(void *arg) {
             exit(EXIT_FAILURE);
         printf("Incoming client connection\n");
 
-        node_handler_args_t handler_args;
-        handler_args.client = client;
-        handler_args.buffer = buffer;
+        node_handler_args_t *handler_args = malloc(sizeof(*handler_args));
+        handler_args->client = client;
+        handler_args->buffer = buffer;
 
-        pthread_create(&thread_id, NULL, node_handler, &handler_args);
+        pthread_create(&thread_id, NULL, node_handler, handler_args);
         conn_counter++;
 
         // Detach each client thread
