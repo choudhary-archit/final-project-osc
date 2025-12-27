@@ -1,0 +1,47 @@
+0 - Sat Dec 27 01:06:48 2025 - Started logger
+0 - Sat Dec 27 01:13:49 2025 - Started logger
+0 - Sat Dec 27 01:15:43 2025 - Started logger
+1 - Sat Dec 27 01:15:43 2025 - A new data.csv file has been created.
+2 - Sat Dec 27 01:15:46 2025 - Sensor node 15 has opened a new connection
+3 - Sat Dec 27 01:15:46 2025 - Sensor node 21 has opened a new connection
+4 - Sat Dec 27 01:15:46 2025 - Data insertion from sensor 15 succeeded
+5 - Sat Dec 27 01:15:46 2025 - Data insertion from sensor 21 succeeded
+6 - Sat Dec 27 01:15:46 2025 - Sensor node 132 has opened a new connection
+7 - Sat Dec 27 01:15:46 2025 - Data insertion from sensor 132 succeeded
+8 - Sat Dec 27 01:15:46 2025 - Sensor node 142 has opened a new connection
+9 - Sat Dec 27 01:15:46 2025 - Sensor node 37 has opened a new connection
+10 - Sat Dec 27 01:15:46 2025 - Data insertion from sensor 142 succeeded
+11 - Sat Dec 27 01:15:46 2025 - Data insertion from sensor 37 succeeded
+12 - Sat Dec 27 01:15:47 2025 - Data insertion from sensor 15 succeeded
+13 - Sat Dec 27 01:15:48 2025 - Data insertion from sensor 15 succeeded
+14 - Sat Dec 27 01:15:48 2025 - Data insertion from sensor 37 succeeded
+15 - Sat Dec 27 01:15:49 2025 - Data insertion from sensor 21 succeeded
+16 - Sat Dec 27 01:15:49 2025 - Data insertion from sensor 132 succeeded
+17 - Sat Dec 27 01:15:49 2025 - Data insertion from sensor 15 succeeded
+18 - Sat Dec 27 01:15:49 2025 - Data insertion from sensor 142 succeeded
+19 - Sat Dec 27 01:15:50 2025 - Sensor node 15 reports it's too hot (avg temp = 20.059613)
+20 - Sat Dec 27 01:15:50 2025 - Data insertion from sensor 37 succeeded
+21 - Sat Dec 27 01:15:50 2025 - Data insertion from sensor 15 succeeded
+22 - Sat Dec 27 01:15:51 2025 - Data insertion from sensor 15 succeeded
+23 - Sat Dec 27 01:15:51 2025 - Sensor node 15 reports it's too hot (avg temp = 20.024081)
+24 - Sat Dec 27 01:15:52 2025 - Data insertion from sensor 132 succeeded
+25 - Sat Dec 27 01:15:52 2025 - Data insertion from sensor 21 succeeded
+26 - Sat Dec 27 01:15:52 2025 - Data insertion from sensor 142 succeeded
+27 - Sat Dec 27 01:15:52 2025 - Data insertion from sensor 37 succeeded
+28 - Sat Dec 27 01:15:52 2025 - Data insertion from sensor 15 succeeded
+29 - Sat Dec 27 01:15:53 2025 - Data insertion from sensor 15 succeeded
+30 - Sat Dec 27 01:15:54 2025 - Sensor node 37 reports it's too hot (avg temp = 20.059613)
+31 - Sat Dec 27 01:15:54 2025 - Data insertion from sensor 37 succeeded
+32 - Sat Dec 27 01:15:54 2025 - Data insertion from sensor 15 succeeded
+33 - Sat Dec 27 01:15:55 2025 - Data insertion from sensor 21 succeeded
+34 - Sat Dec 27 01:15:55 2025 - Data insertion from sensor 142 succeeded
+35 - Sat Dec 27 01:15:55 2025 - Data insertion from sensor 132 succeeded
+36 - Sat Dec 27 01:15:55 2025 - Data insertion from sensor 15 succeeded
+37 - Sat Dec 27 01:15:56 2025 - Sensor node 37 reports it's too hot (avg temp = 20.024081)
+38 - Sat Dec 27 01:15:56 2025 - Data insertion from sensor 37 succeeded
+39 - Sat Dec 27 01:15:56 2025 - Data insertion from sensor 15 succeeded
+40 - Sat Dec 27 01:15:57 2025 - Sensor node 15 has closed the connection
+41 - Sat Dec 27 01:15:57 2025 - Sensor node 21 has closed the connection
+42 - Sat Dec 27 01:15:57 2025 - Sensor node 132 has closed the connection
+43 - Sat Dec 27 01:15:57 2025 - Sensor node 37 has closed the connection
+44 - Sat Dec 27 01:15:57 2025 - Sensor node 142 has closed the connection

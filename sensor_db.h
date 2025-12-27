@@ -12,6 +12,12 @@
 #include "config.h"
 #include "sbuffer.h"
 
+// Logger methods
+int write_to_log_process(char *msg);
+void start_logger();
+void stop_logger();
+
+// Storage manager methods
 void *run_db(void *arg);
 FILE * open_db(char * filename, bool append);
 int insert_sensor(FILE * f, sensor_id_t id, sensor_value_t value, sensor_ts_t ts);

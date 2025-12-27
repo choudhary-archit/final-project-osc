@@ -8,6 +8,7 @@
 #include "lib/dplist.h"
 #include "datamgr.h"
 #include "config.h"
+#include "sensor_db.h"
 
 
 // Defining element of dplist
@@ -138,21 +139,27 @@ void *run_datamgr(void *args) {
                 element->running_avg += (element->prev_vals)[i] / RUN_AVG_LENGTH;
             }
 
-            // TODO: Logger
+            char log_msg[128];
             // Check if value outside bounds
             if ((element->prev_vals)[0] != -99999) {
                 if (element->running_avg < SET_MIN_TEMP) {
-                    printf("[!] temp too low!\n");
-                    // fprintf(stderr, "[!] Avg temp below SET_MIN_TEMP\n");
+                    snprintf(log_msg, sizeof(log_msg),
+                            "Sensor node %u reports it's too cold (avg temp = %f)",
+                            element->sensor_id, element->running_avg);
+                    write_to_log_process(log_msg);
                 } else if (element->running_avg > SET_MAX_TEMP) {
-                    printf("[!] temp too high!\n");
-                    // fprintf(stderr, "[!] Avg temp above SET_MAX_TEMP\n");
+                    snprintf(log_msg, sizeof(log_msg),
+                            "Sensor node %u reports it's too hot (avg temp = %f)",
+                            element->sensor_id, element->running_avg);
+                    write_to_log_process(log_msg);
                 }
             }
         } else {
             break;
         }
     }
+
+    return NULL;
 }
 
 // Free sensor data

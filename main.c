@@ -22,6 +22,10 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    // Start logger
+    start_logger();
+    write_to_log_process("Started logger");
+
     // Start connmgr thread
     conn_args_t conn_args;
     conn_args.max_conn = atoi(argv[2]);
@@ -47,6 +51,10 @@ int main(int argc, char *argv[]) {
     pthread_join(connmgr_thread, NULL);
     pthread_join(datamgr_thread, NULL);
     pthread_join(db_thread, NULL);
+
+    // Stop logger
+    write_to_log_process("Stopped logger");
+    stop_logger();
 
     // Free common sbuffer
     sbuffer_free(&buffer);

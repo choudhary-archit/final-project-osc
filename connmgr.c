@@ -7,10 +7,12 @@
 #include <sys/select.h>
 #include <inttypes.h>
 #include <pthread.h>
+#include <stdbool.h>
 
 #include "connmgr.h"
 #include "sbuffer.h"
 #include "config.h"
+#include "sensor_db.h"
 #include "lib/tcpsock.h"
 
 pthread_mutex_t print_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -44,8 +46,10 @@ void *node_handler(void *arg) {
 
     free(handler_args);
 
-    int bytes, result;
+    int bytes;
     sensor_data_t data;
+
+    bool logged = false;
 
     while (1) {
         int w = wait_for_data(client);
@@ -65,6 +69,14 @@ void *node_handler(void *arg) {
         bytes = sizeof(data.id);
         if (tcp_receive(client, &data.id, &bytes) != TCP_NO_ERROR) break;
 
+        if (!logged) {
+            char log_msg[128];
+            snprintf(log_msg, sizeof(log_msg),
+                    "Sensor node %u has opened a new connection", data.id);
+            write_to_log_process(log_msg);
+            logged = true;
+        }
+
         // read temperature
         bytes = sizeof(data.value);
         if (tcp_receive(client, &data.value, &bytes) != TCP_NO_ERROR) break;
@@ -77,6 +89,11 @@ void *node_handler(void *arg) {
     }
 
     // Close client
+    char log_msg[128];
+    snprintf(log_msg, sizeof(log_msg),
+            "Sensor node %u has closed the connection", data.id);
+    write_to_log_process(log_msg);
+
     tcp_close(&client);
     return NULL;
 }
@@ -100,7 +117,6 @@ void *run_connmgr(void *arg) {
         // Program stops here until a client connects
         if (tcp_wait_for_connection(server, &client) != TCP_NO_ERROR)
             exit(EXIT_FAILURE);
-        printf("Incoming client connection\n");
 
         node_handler_args_t *handler_args = malloc(sizeof(*handler_args));
         handler_args->client = client;
@@ -116,4 +132,5 @@ void *run_connmgr(void *arg) {
     // Closing server
     if (tcp_close(&server) != TCP_NO_ERROR) exit(EXIT_FAILURE);
     printf("Test server is shutting down\n");
+    return NULL;
 }
