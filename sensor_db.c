@@ -38,14 +38,14 @@ static int create_log_process() {
         FILE *in = fdopen(pipe_fd[0], "r");
         if (!in) {
             fprintf(stderr, "[!] ERR: Could not read fd");
-            return 1;
+            _exit(1);
         }
 
-        FILE *log_file = fopen("gateway.log", "a");
+        FILE *log_file = fopen("gateway.log", "w");
         if (!log_file) {
             fprintf(stderr, "[!] ERR: Could not open log file");
             fclose(in);
-            return 1;
+            _exit(1);
         }
 
         char line[512];
@@ -67,6 +67,8 @@ static int create_log_process() {
 
         fclose(log_file);
         fclose(in);
+
+        _exit(0);
     } else if (logger_pid > 0) {
         close(pipe_fd[0]);
     }
