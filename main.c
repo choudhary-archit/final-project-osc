@@ -58,4 +58,6 @@ int main(int argc, char *argv[]) {
 
     // Free common sbuffer
     sbuffer_free(&buffer);
+
+    return 0;
 }

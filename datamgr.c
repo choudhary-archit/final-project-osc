@@ -115,6 +115,8 @@ void *run_datamgr(void *args) {
         dpl_insert_at_index(sensor_info, &node, 0, true);
     }
 
+    fclose(fp_sensor_map);
+
     // Read sensor data from sbuffer
     sensor_data_t sd;
 
@@ -123,6 +125,16 @@ void *run_datamgr(void *args) {
         if (sbuffer_remove(buffer, &sd, 0) != SBUFFER_NO_DATA) {
             // Find element in dplist
             node_info_t *element = get_element_from_id(sd.id);
+
+            // If can't find ID in list
+            if (!element) {
+                char log_msg_err[128];
+                snprintf(log_msg_err, sizeof(log_msg_err),
+                        "Received sensor data with invalid sensor node ID %u",
+                        sd.id);
+                write_to_log_process(log_msg_err);
+                continue;
+            }
 
             // Update timestamp
             element->last_modified = sd.ts;
@@ -158,6 +170,8 @@ void *run_datamgr(void *args) {
             break;
         }
     }
+
+    datamgr_free(&sensor_info);
 
     return NULL;
 }

@@ -2,12 +2,13 @@
  * \author Archit Choudhary
  */
 
+#include <sys/select.h>
+#include <sys/socket.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/select.h>
+#include <stdbool.h>
 #include <inttypes.h>
 #include <pthread.h>
-#include <stdbool.h>
 
 #include "connmgr.h"
 #include "sbuffer.h"
@@ -48,8 +49,10 @@ void *node_handler(void *arg) {
 
     int bytes;
     sensor_data_t data;
+    sensor_id_t id;
 
     bool logged = false;
+    bool saved_id = false;
 
     while (1) {
         int w = wait_for_data(client);
@@ -77,6 +80,11 @@ void *node_handler(void *arg) {
             logged = true;
         }
 
+        if (!saved_id) {
+            id = data.id;
+            saved_id = true;
+        }
+
         // read temperature
         bytes = sizeof(data.value);
         if (tcp_receive(client, &data.value, &bytes) != TCP_NO_ERROR) break;
@@ -91,7 +99,7 @@ void *node_handler(void *arg) {
     // Close client
     char log_msg[128];
     snprintf(log_msg, sizeof(log_msg),
-            "Sensor node %u has closed the connection", data.id);
+            "Sensor node %u has closed the connection", id);
     write_to_log_process(log_msg);
 
     tcp_close(&client);
@@ -105,32 +113,40 @@ void *run_connmgr(void *arg) {
     sbuffer_t *buffer = conn_args->buffer;
 
     tcpsock_t *server, *client;
-    int conn_counter = 0;
 
     // Open port PORT on server
-    printf("Test server is started\n");
     if (tcp_passive_open(&server, port) != TCP_NO_ERROR) exit(EXIT_FAILURE);
 
-    // Handle clients
-    pthread_t thread_id;
-    do {
+    // Client threadpool
+    pthread_t *cl_threads = malloc(sizeof(*cl_threads) * max_conn);
+
+    int conn_counter;
+    for (conn_counter = 0; conn_counter < max_conn; conn_counter++) {
         // Program stops here until a client connects
         if (tcp_wait_for_connection(server, &client) != TCP_NO_ERROR)
             exit(EXIT_FAILURE);
 
+        // Set up args for node handler
         node_handler_args_t *handler_args = malloc(sizeof(*handler_args));
         handler_args->client = client;
         handler_args->buffer = buffer;
 
-        pthread_create(&thread_id, NULL, node_handler, handler_args);
-        conn_counter++;
+        // Create client thread
+        pthread_create(&cl_threads[conn_counter], NULL, node_handler, handler_args);
+    }
 
-        // Detach each client thread
-        pthread_detach(thread_id);
-    } while (conn_counter < max_conn);
-
-    // Closing server
+    // Close server
     if (tcp_close(&server) != TCP_NO_ERROR) exit(EXIT_FAILURE);
-    printf("Test server is shutting down\n");
+
+    // Join client threads
+    for (int i = 0; i < max_conn; i++) {
+        pthread_join(cl_threads[i], NULL);
+    }
+    free(cl_threads);
+
+    // Add EOS entry to buffer
+    sensor_data_t eos = {.id = 0, .value = 0, .ts = 0};
+    sbuffer_insert(buffer, &eos);
+
     return NULL;
 }
